@@ -1,17 +1,10 @@
-// Header.js
 import React from 'react';
-import { Link } from 'react-router-dom';
 
 function Header() {
   return (
-    <nav>
-      <ul>
-        <li>
-          <Link to="/">Home</Link>
-        </li>
-        {/* Add more navigation links */}
-      </ul>
-    </nav>
+    <header>
+      <h1>Adoption Center</h1>
+    </header>
   );
 }
 
