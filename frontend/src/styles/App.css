@@ -17,10 +17,18 @@ body {
 
 /* Style the header */
 .header {
-  background-color: #333;
-  color: #fff;
+  background-color: #688;
+  color: #000;
   padding: 10px;
-  text-align: center;
+  display: flex; /* Use flexbox */
+  justify-content: center; /* Center the links horizontally */
+}
+
+/* Style the header links */
+.header-link {
+  margin: 0 10px; /* Add margin between the links */
+  color: #fff;
+  text-decoration: none;
 }
 
 /* Style the main content area */
