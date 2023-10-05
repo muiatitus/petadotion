@@ -22,17 +22,17 @@ def login():
     if not user or not check_password_hash(user.password, password):
         return jsonify(message='Invalid email or password'), 401
 
-    # Generate JWT token
+    # Generate JWT token with a 1-minute expiration
     token = jwt.encode(
         {
             'user_id': user.id,
-            'exp': datetime.utcnow() + timedelta(hours=1)
+            'exp': datetime.utcnow() + timedelta(minutes=1)
         },
         current_app.config['SECRET_KEY'],
         algorithm='HS256'
     )
 
-    return jsonify(token=token.decode('utf-8'))
+    return jsonify(token=token.decode('utf-8'), message=f'Welcome, {user.username}!')
 
 @auth_routes.route('/logout', methods=['POST'])
 def logout():
