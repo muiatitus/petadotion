@@ -1,65 +1,58 @@
-from app import db
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
+from flask_sqlalchemy import SQLAlchemy
+from flask_bcrypt import Bcrypt
+
+db = SQLAlchemy()
+bcrypt = Bcrypt()
+
 
 class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(50), nullable=False)
-    email = db.Column(db.String(100), nullable=False, unique=True)
-    password = db.Column(db.String(100), nullable=False)
-    first_name = db.Column(db.String(50), nullable=False)
-    last_name = db.Column(db.String(50), nullable=False)
-    phone = db.Column(db.String(20))
-    address = db.Column(db.String(200))
-    created_at = db.Column(db.DateTime, nullable=False)
+    __tablename__ = 'users'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    username = db.Column(db.String(255), unique=True, nullable=False)
+    email = db.Column(db.String(255), unique=True, nullable=False)
+    password = db.Column(db.String(255), nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
+
+    # Define a one-to-many relationship with pets
+    pets = relationship('Pet', backref='owner', lazy=True)
+
+    def __init__(self, username, email, password):
+        self.username = username
+        self.email = email
+        self.password = bcrypt.generate_password_hash(password).decode('utf-8')
+
+    def update_profile(self, **kwargs):
+        # Update user profile fields
+        for key, value in kwargs.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
+        # Save the changes to the database
+        db.session.commit()
+
 
 class Pet(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    breed_id = db.Column(db.Integer, db.ForeignKey('breed.id'), nullable=False)
-    breed = db.relationship('Breed', backref=db.backref('pets'))
-    age = db.Column(db.Integer)
-    description = db.Column(db.Text)
-    image_url = db.Column(db.String(200))
-    adoption_status = db.Column(db.String(20))
-    price = db.Column(db.Float)
+    __tablename__ = 'pets'
 
-class Breed(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    breed_name = db.Column(db.String(100), nullable=False)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String(255), nullable=False)
+    type = db.Column(db.String(100), nullable=False)
+    breed = db.Column(db.String(100), nullable=False)
+    age = db.Column(db.Integer, nullable=False)
+    description = db.Column(db.String(1000))
+    is_adopted = db.Column(db.Integer, default=0)  # 0 for available, 1 for adopted
+    created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
 
-class FavoritePet(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    user = db.relationship('User', backref=db.backref('favorite_pets'))
-    pet_id = db.Column(db.Integer, db.ForeignKey('pet.id'), nullable=False)
-    pet = db.relationship('Pet', backref=db.backref('favorited_by'))
-    favorite_date = db.Column(db.DateTime, nullable=False)
+    # Define a foreign key relationship with users
+    owner_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
-class Administrator(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(50), nullable=False)
-    email = db.Column(db.String(100), nullable=False, unique=True)
-    password = db.Column(db.String(100), nullable=False)
-    created_at = db.Column(db.DateTime, nullable=False)
-
-class PostedPet(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    admin_id = db.Column(db.Integer, db.ForeignKey('administrator.id'), nullable=False)
-    admin = db.relationship('Administrator', backref=db.backref('posted_pets'))
-    pet_id = db.Column(db.Integer, db.ForeignKey('pet.id'), nullable=False)
-    pet = db.relationship('Pet', backref=db.backref('posted_by'))
-    posting_date = db.Column(db.DateTime, nullable=False)
-    status_id = db.Column(db.Integer, db.ForeignKey('pet_status.id'), nullable=False)
-    status = db.relationship('PetStatus', backref=db.backref('posted_pets'))
-
-class PetStatus(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    status_name = db.Column(db.String(50), nullable=False)
-
-class AdoptionApplication(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    user = db.relationship('User', backref=db.backref('adoption_applications'))
-    pet_id = db.Column(db.Integer, db.ForeignKey('pet.id'), nullable=False)
-    pet = db.relationship('Pet', backref=db.backref('applications'))
-    status = db.Column(db.String(20))
-    submission_date = db.Column(db.DateTime, nullable=False)
+    def __init__(self, name, type, breed, age, description, owner_id):
+        self.name = name
+        self.type = type
+        self.breed = breed
+        self.age = age
+        self.description = description
+        self.owner_id = owner_id
