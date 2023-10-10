@@ -6,4 +6,6 @@ Werkzeug==2.3.7
 Flask-RESTful
 Flask-CORS
 SQLAlchemy==1.3.24
-psycopg2-binary 
+flask_bcrypt==1.0.1
+psycopg2-binary
+bcrypt==4.0.1

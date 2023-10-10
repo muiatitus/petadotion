@@ -1,9 +1,10 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, make_response
 from flask_sqlalchemy import SQLAlchemy
-from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, unset_jwt_cookies, get_jwt_identity
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from datetime import timedelta  # Import timedelta for token expiration
+from flask_migrate import Migrate
 
 # Initialize the Flask app
 app = Flask(__name__)
@@ -24,12 +25,12 @@ bcrypt = Bcrypt(app)
 # Initialize JWT (JSON Web Tokens) for authentication
 jwt = JWTManager(app)
 
+migrate = Migrate(app, db)
+
 # Import your models here
 from models import User, Pet  # Import your User and Pet models
 
 # Define your routes here
-
-# Example route to create a new user
 
 # Create a new pet listing
 @app.route('/pets', methods=['POST'])
@@ -185,6 +186,16 @@ def login():
     except Exception as e:
         # Handle exceptions or database errors gracefully
         return jsonify(message='An error occurred while processing your request'), 500
+
+
+# Logout route
+@app.route('/logout', methods=['POST'])
+@jwt_required()  # Requires authentication to log out
+def logout():
+    # Clear the access token from the cookies
+    resp = make_response(jsonify(message='Logged out successfully'))
+    unset_jwt_cookies(resp)
+    return resp, 200
 
 if __name__ == '__main__':
     app.run(debug=True)
